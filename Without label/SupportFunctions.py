@@ -68,7 +68,7 @@ def ShamtRegisterConverter(token):
 
 
 # decimal to binary --> 
-def SignedConverter_4bit(decNum):
+def ConvertNumber(decNum):
     isNeg = True if decNum[0]=='-' else False
     if isNeg:
         absNum = abs(int(decNum[1:]))

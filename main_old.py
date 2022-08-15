@@ -22,57 +22,18 @@ outfile = open(outfilename,'w')
 
 lines = infile.readlines()
 
-instructions_list = []
-labels_list = {}
-
 for line in lines:
     line = line.strip().lower().replace(","," ")
     if line == "":
+        outfile.write('\n')
         continue
+    print(line)
+    
     tokens = line.split()     
     for i in range(len(tokens)):
         tokens[i] = tokens[i].strip()
-    
-    if tokens[0].endswith(':'):
-        label_name = tokens[0].replace(':','')
-        labels_list[label_name] = len(instructions_list)
-        instructions_list.append(tokens[1:])
-    elif tokens[0] == 'push':
-        register = tokens[1]
-        # sw register 0($sp)
-        line1 = ['sw']
-        line1.append(register)
-        line1.append('0($sp)')
-        instructions_list.append(line1)
-        # subi $sp, $sp, 1
-        line2 = ['subi', '$sp', '$sp', '1']
-        instructions_list.append(line2)
-    elif tokens[0] == 'pop':
-        register = tokens[1]
-        # addi $sp, $sp, 1
-        line1 = ['addi','$sp', '$sp', '1']
-        instructions_list.append(line1)
-        # lw register 0($sp)
-        line2 = ['lw']
-        line2.append(register)
-        line2.append('0($sp)')
-        instructions_list.append(line2)
-    else: 
-        instructions_list.append(tokens)
-print("---------Pass 1 Done---------\nPush and pop are converted into simple instructions\nall labels are identified")
-print('Full instruction list:')
-for line_no in range(len(instructions_list)):
-    print(line_no," \t", instructions_list[line_no])
-print('Full label list:\n',labels_list)
-print('\n\n---------Starting Pass 2: ---------')
 
-#pass 2
-for line_no in range(len(instructions_list)): 
-    tokens = instructions_list[line_no]
-    print(line_no," \t", instructions_list[line_no])
-    if len(tokens) == 0:
-        continue
-    instruction = tokens[0]    
+    instruction = tokens[0]        
 
     if instruction in ["add","sub","and","or","nor"]:
         # R format detected. dst = src1 + src2. 
@@ -83,7 +44,7 @@ for line_no in range(len(instructions_list)):
         towrite = OppCodeConverter(instruction) + " " + RegisterConverter(tokens[2]) + " " + \
                 RegisterConverter(tokens[3])+" " + RegisterConverter(tokens[1])
 
-    elif instruction in ["addi","subi","andi","ori"]:
+    elif instruction in ["addi","subi","andi","ori","beq","bne"]:
         # dst = src + amount 
         # Output Format: opp dst src immediate
         if len(tokens) != 4:
@@ -92,7 +53,7 @@ for line_no in range(len(instructions_list)):
 
         towrite = OppCodeConverter(instruction) + " " + RegisterConverter(tokens[2]) + " " + \
                 RegisterConverter(tokens[1])+" " + SignedConverter_4bit(tokens[3])
-
+    
     elif instruction in ["sll","srl"]:
         if len(tokens) != 4:
             print("Invalid Syntax")
@@ -117,11 +78,44 @@ for line_no in range(len(instructions_list)):
         src, shamt =  ShamtRegisterConverter(token=tokens[2])
         towrite = OppCodeConverter(instruction) + " "+ src+" "+dst+" "+shamt
 
-    # "beq","bne" kora lagbe
+    elif instruction == "j":
+        if len(tokens) != 2:
+            print("Invalid Syntax")
+            sys.exit()
+        addr = int(tokens[1])
+        if addr >= 256 or addr <0: 
+            print("Invalid address for J format")
+            sys.exit()
+        addr = bin(addr).replace("0b", "")
+        while len(addr) < 8:
+            addr = "0"+addr
+        towrite = OppCodeConverter(instruction) + " " + addr[0:4] +" "+ addr[4:8] + " 0000"
+    
+    elif instruction == "push":
+        if len(tokens) != 2:
+            print("Invalid Syntax")
+            sys.exit()
+        register = tokens[1]
+        # sw register 0($sp)
+        towrite = OppCodeConverter("sw") + " "+ RegisterConverter("$sp")+" "+RegisterConverter(register)+" 0000\n"
+        # subi $sp, $sp, 1
+        towrite += OppCodeConverter("subi") + " " + RegisterConverter("$sp") + " " + RegisterConverter("$sp") + " 0001"
 
+    elif instruction == "pop":
+        if len(tokens) != 2:
+            print("Invalid Syntax")
+            sys.exit()
+        register = tokens[1]
+        # addi $sp, $sp, 1
+        towrite = OppCodeConverter("addi") + " " + RegisterConverter("$sp") + " " + RegisterConverter("$sp") + " 0001\n"
+        # lw register 0($sp)
+        towrite += OppCodeConverter("lw") + " " + RegisterConverter("$sp")+" "+RegisterConverter(register)+" 0000\n"
+
+
+    
     else:
         print("Could not process line: ",line)
-        #sys.exit()
+        sys.exit()
     #processed one line
     print(towrite + "\n\n")
     outfile.write(towrite) 
