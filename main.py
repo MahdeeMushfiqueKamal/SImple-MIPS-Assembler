@@ -44,7 +44,7 @@ for line in lines:
         towrite = OppCodeConverter(instruction) + " " + RegisterConverter(tokens[2]) + " " + \
                 RegisterConverter(tokens[3])+" " + RegisterConverter(tokens[1])
 
-    elif instruction in ["addi","subi","andi","ori","sll","srl","beq","bne"]:
+    elif instruction in ["addi","subi","andi","ori","beq","bne"]:
         # dst = src + amount 
         # Output Format: opp dst src immediate
         if len(tokens) != 4:
@@ -53,7 +53,21 @@ for line in lines:
 
         towrite = OppCodeConverter(instruction) + " " + RegisterConverter(tokens[2]) + " " + \
                 RegisterConverter(tokens[1])+" " + ConvertNumber(tokens[3])
+    
+    elif instruction in ["sll","srl"]:
+        if len(tokens) != 4:
+            print("Invalid Syntax")
+            sys.exit()
+        shamt = int(tokens[3])
+        if(shamt <0 or shamt>15):
+            print("Invalid shift amount")
+            sys.exit()
+        shamt = bin(shamt).replace("0b", "")
+        while len(shamt) < 4:
+            shamt = "0"+shamt
         
+        towrite = OppCodeConverter(instruction) + " " + RegisterConverter(tokens[2]) + " " + \
+                RegisterConverter(tokens[1])+" " + shamt
 
     elif instruction in ["lw","sw"]:
         # output format: Opcode Src Dst Shamt
@@ -85,7 +99,7 @@ for line in lines:
         # sw register 0($sp)
         towrite = OppCodeConverter("sw") + " "+ RegisterConverter("$sp")+" "+RegisterConverter(register)+" 0000\n"
         # subi $sp, $sp, 1
-        towrite += OppCodeConverter("subi") + " " + RegisterConverter("$sp") + " " + RegisterConverter("$sp") + "0001"
+        towrite += OppCodeConverter("subi") + " " + RegisterConverter("$sp") + " " + RegisterConverter("$sp") + " 0001"
 
     elif instruction == "pop":
         if len(tokens) != 2:
@@ -93,9 +107,9 @@ for line in lines:
             sys.exit()
         register = tokens[1]
         # addi $sp, $sp, 1
-        towrite = OppCodeConverter("addi") + " " + RegisterConverter("$sp") + " " + RegisterConverter("$sp") + "0001\n"
+        towrite = OppCodeConverter("addi") + " " + RegisterConverter("$sp") + " " + RegisterConverter("$sp") + " 0001\n"
         # lw register 0($sp)
-        towrite += OppCodeConverter("lw") + RegisterConverter("$sp")+" "+RegisterConverter(register)+" 0000\n"
+        towrite += OppCodeConverter("lw") + " " + RegisterConverter("$sp")+" "+RegisterConverter(register)+" 0000\n"
 
 
     
