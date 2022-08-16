@@ -124,11 +124,27 @@ for line_no in range(len(instructions_list)):
             sys.exit()
         label_name = tokens[3]
         label_position = labels_list[label_name]
-        print('Branch instruction on line: ', line_no, 'need to jump to ', label_position)
+        print('Branch instruction on line: ', line_no, '\tneed to jump to ', label_position)
         shamt = label_position - line_no - 1
         print('Shift amount is: ', shamt)
         towrite = OppCodeConverter(instruction) + " " + RegisterConverter(tokens[2]) + " " + \
                 RegisterConverter(tokens[1])+" " + SignedConverter_4bit(str(shamt))
+
+    elif instruction == "j":
+        if len(tokens) != 2:
+            print("Invalid Syntax")
+            sys.exit()
+        label_name = tokens[1]
+        label_position = labels_list[label_name]
+        print('Jump instruction on line: ', line_no, '\tneed to jump to ', label_position)
+        
+        if label_position >= 256 or label_position <0: 
+            print("Invalid address for J format")
+            sys.exit()
+        addr = bin(label_position).replace("0b", "")
+        while len(addr) < 8:
+            addr = "0"+addr
+        towrite = OppCodeConverter(instruction) + " " + addr[0:4] +" "+ addr[4:8] + " 0000"
 
     else:
         print("Could not process line: ",tokens)
