@@ -29,7 +29,7 @@ def OppCodeConverter(ins):
         return "0010"
     elif ins == "beq":
         return "1111"
-    elif ins == "bne":
+    elif ins == "bneq":
         return "1010"
     elif ins == "j":
         return "1100"

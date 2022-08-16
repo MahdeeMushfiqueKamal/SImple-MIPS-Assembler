@@ -117,10 +117,21 @@ for line_no in range(len(instructions_list)):
         src, shamt =  ShamtRegisterConverter(token=tokens[2])
         towrite = OppCodeConverter(instruction) + " "+ src+" "+dst+" "+shamt
 
-    # "beq","bne" kora lagbe
+    # "beq","bneq" kora lagbe
+    elif instruction in ['beq', 'bneq']:
+        if len(tokens) != 4:
+            print("Invalid Syntax")
+            sys.exit()
+        label_name = tokens[3]
+        label_position = labels_list[label_name]
+        print('Branch instruction on line: ', line_no, 'need to jump to ', label_position)
+        shamt = label_position - line_no - 1
+        print('Shift amount is: ', shamt)
+        towrite = OppCodeConverter(instruction) + " " + RegisterConverter(tokens[2]) + " " + \
+                RegisterConverter(tokens[1])+" " + SignedConverter_4bit(str(shamt))
 
     else:
-        print("Could not process line: ",line)
+        print("Could not process line: ",tokens)
         #sys.exit()
     #processed one line
     print(towrite + "\n\n")
